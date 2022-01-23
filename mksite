@@ -1,0 +1,67 @@
+#!/bin/bash
+
+if [ ! -f ABISMAL.conf ]; then
+	echo "ABISMAL.conf not found! Please create that file and place it in the root directory of this website."
+	exit
+fi
+
+iterations=0
+rm *.html 2> /dev/null
+
+for page in pages/*.html; do
+	page_basename=$(basename $page)
+	touch $page_basename
+
+	echo "<!DOCTYPE html>" >> $page_basename
+
+	if grep -vw "^#.*" ABISMAL.conf | grep -q -wi "language"; then
+		echo "<html lang=\"$(grep -vw "^#.*" ABISMAL.conf | grep "language" | awk -F '=' '{print $NF}')\">" >> $page_basename
+	else
+		echo "<html lang=\"en\">" >> $page_basename
+	fi
+
+	echo "<head>
+<meta charset=\"UTF-8\">" >> $page_basename
+
+	if grep -vw "^#.*" ABISMAL.conf | grep -q -wi "sitename"; then
+		echo "<title>$(grep -vw "^#.*" ABISMAL.conf | grep "sitename" | awk -F '=' '{print $NF}') - $(echo "${page_basename%.html}" | sed -e 's/_/ /g' -e 's/\b\(.\)/\u\1/g')</title>" >> $page_basename
+	else
+		echo "<title>$(echo "${page_basename%.html}" | sed -e 's/_/ /g' -e 's/\b\(.\)/\u\1/g')</title>" >> $page_basename
+	fi
+
+echo "<link rel=\"stylesheet\" href=\"global.css\">
+</head>" >> $page_basename
+	
+	printf "<body style=\"" >> $page_basename
+	
+	if grep -vw "^#.*" ABISMAL.conf | grep -q -wi "backgroundimage"; then 
+		printf "background-image: url('$(grep -vw "^#.*" ABISMAL.conf | grep "backgroundimage" | awk -F '=' '{print $NF}')');" >> $page_basename
+	fi
+
+	if grep -vw "^#.*" ABISMAL.conf | grep -q -wi "backgroundcolor"; then
+		printf "background-color: $(grep -vw "^#.*" ABISMAL.conf | grep "backgroundcolor" | awk -F '=' '{print $NF}')" >> $page_basename
+	fi
+
+	printf "\">" >> $page_basename
+	
+	echo "<i>Managed by ABISMAL - A Big Infomational Site Management Algorithm</i>
+<nav id=\"navbar\">" >> $page_basename
+	for pagepath in `ls -tr pages`; do
+		pagepath_basename=$(basename $pagepath)
+		if [ "$pagepath_basename" = "$page_basename" ]; then
+			echo "<a class=\"nav-item\" href=\"$pagepath_basename\">$(echo "[ ${pagepath_basename%.html} ]" | sed -e 's/_/ /g' -e 's/\b\(.\)/\u\1/g')</a>" >> $page_basename
+		else
+			echo "<a class=\"nav-item\" href=\"$pagepath_basename\">$(echo "${pagepath_basename%.html}" | sed -e 's/_/ /g' -e 's/\b\(.\)/\u\1/g')</a>" >> $page_basename
+		fi
+	done
+	echo "</nav>
+<main>" >> $page_basename
+	cat $page >> $page_basename
+	echo "</main>
+</body>
+</html>
+" >> $page_basename
+	iterations=$((iterations+1))
+done
+
+echo "Compiled website consisting of $iterations pages!"
