@@ -1,6 +1,6 @@
 /* Basic rules to make the website look semi-good, remove these if you wish */
 html { min-height: 100%; }
-#navbar { text-align: center; }
+#navbar { text-align: center; margin-top: 10px; }
 .nav-item { margin: 0; padding: 5px 10px; }
 .nav-item:hover { color: red; }
 main > * { margin: 10px 15px; }
